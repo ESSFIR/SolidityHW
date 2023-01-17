@@ -17,32 +17,44 @@ abstract contract Animal{
     }
 }
 
-contract Wolf is Animal{
+abstract contract Omnivore is Animal{
+    string[] meal = ["meat", "plant"];
 
-    string constant MEAL = "meat";
+    function eat(string memory food) view virtual override public returns(string memory){
+        for(uint256 i=0; i < meal.length; i++){
+            if(StringComparer.compare(food,meal[i])){
+                return super.eat(food);
+            }
+        }
+        revert("I don`t eat any of that!");
+    }
+}
 
-    function eat(string memory food) view override public returns(string memory){
-        require(StringComparer.compare(food,MEAL), string.concat("Disgusting! Self-respecting wolf doesn`t eat ",food));
+abstract contract Carnivore is Animal{
+    string constant MEAL="meat";
+
+    modifier eatOnlyMeat(string memory food){
+        require(StringComparer.compare(food,MEAL),string.concat("Disgusting! Self-respecting Carnivore doesn`t eat ",food));
+        _;
+    }
+
+    function eat(string memory food) view virtual override public eatOnlyMeat(food) returns(string memory){
         return super.eat(food);
     }
+}
+
+contract Wolf is Carnivore{
 
     function speak() view override public returns(string memory){
         return "Awoo";
     }
 }
 
-contract Dog is Animal{
-    string[] meal = ["meat", "plant"];
+contract Dog is Omnivore{
     string constant POISON = "chocolate";
-
     function eat(string memory food) view override public returns(string memory){
-        require(!StringComparer.compare(food,POISON), string.concat("ugh! That`s dangerous!"));
-        for(uint256 i=0; i < meal.length; i++){
-            if(StringComparer.compare(food,meal[i])){
-                return super.eat(food);
-            }
-        }
-        revert("Can you give me something more delicious?");
+        require(!StringComparer.compare(food,POISON), string.concat(food, " is dangerous!"));
+        return super.eat(food);
     }
 
     function speak() view override public returns(string memory){
